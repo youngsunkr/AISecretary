@@ -2,3 +2,8 @@
 {"role":"user","text":"지금 에이전트들이 뭐 하고 있어?","ts":1778508443356}
 {"role":"user","text":"지금 에이전트들이 뭐 하고 있어?","ts":1778541692999}
 {"role":"user","text":"회사 홈페이지 전문가처럼 만들어줘","ts":1778542277027}
+{"role":"user","text":"회사 홈페이지 전문가처럼 만들어줘","ts":1778542340374}
+{"role":"user","text":"/tools","ts":1778551136566}
+{"role":"user","text":"회사 홈페이지 전문가처럼 만들어줘","ts":1778559362726}
+{"role":"user","text":"기술 스택 및 아키텍처 : \n- clean architecture 사용\n- cqrs pattern 사용\n- mediat pattern 사용\n- outbox pattern 사용\n- adapter pattern 사용\n- plug-in system 적용(외부 dll dynamic load)\n- 헥사고날 architecture 사용\n- vertical slice architecture 사용\n- Aspect-oriented programming (AOP) 사용","ts":1778560013953}
+{"role":"user","text":"타깃 청중: 고객, 회사임직원","ts":1778560089787}
