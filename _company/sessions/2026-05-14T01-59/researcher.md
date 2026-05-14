@@ -1,0 +1,57 @@
+# 🔍 Researcher — .NET 9 또는 그 이상의 버전에서 가장 모범적(Best Practice)인 평가 시스템의 아키텍처 패턴(예: CQRS, Clean Architecture 등)을 조사하고, 이를 적용할 때 고려해야 할 최신 보안 및 확장성 요소를 정리해줘.
+
+🔍 Researcher: 작업 시작합니다.
+
+CEO의 지시에 따라 `.NET 9` 이상 버전을 기준으로 모범적인 평가 시스템 아키텍처 패턴, 그리고 필수적으로 고려해야 할 최신 보안 및 확장성 요소를 조사하여 정리했습니다.
+
+평가 시스템은 데이터 입력(Write)과 복잡한 로직 계산/조회(Read)의 트래픽 특성이 매우 다르기 때문에, **여러 패턴을 조합하는 것이 가장 모범적**입니다. 단일 아키텍처만으로는 성능 병목이나 유지보수성 문제가 발생할 수 있습니다.
+
+---
+
+## 🚀 1. 추천 아키텍처 패턴: Clean Architecture + CQRS + DDD의 결합
+
+가장 높은 수준의 확장성과 테스트 용이성을 확보하는 조합은 **Clean Architecture**를 기반으로 **Domain-Driven Design (DDD)**을 적용하고, 트랜잭션 경계(Write)와 조회 로직(Read)에 **CQRS**를 분리하는 것입니다.
+
+| 패턴 | 역할 및 목적 | 평가 시스템에의 이점 |
+| :--- | :--- | :--- |
+| **Clean Architecture (청정 아키텍처)** | 시스템의 핵심 도메인 로직을 외부 기술(DB, UI, 프레임워크)으로부터 격리합니다. '테스트 용이성'과 '유지보수성'을 극대화합니다. | 평가 기준이나 점수 계산 공식이 변경되더라도, 인프라 계층 수정 없이 비즈니스 로직만 독립적으로 수정/배포 가능합니다. |
+| **Domain-Driven Design (DDD)** | 시스템의 핵심 개념(도메인)을 정의하고 모델링합니다. '평가 항목', '점수 가중치', '최종 등급' 등을 명확한 엔티티로 관리합니다. | 평가 로직이 복잡해질 때, 비즈니스 규칙(Rule)이 코드 깊숙이에 묻히는 것을 방지하고, 핵심 도메인 개념을 중심으로 모델링하여 누락되는 로직을 최소화합니다. |
+| **Command Query Responsibility Segregation (CQRS)** | 데이터 변경(Command: 점수 제출, 기준 수정 등)과 데이터 조회(Query: 결과 보고서 생성, 대시보드 보기 등)를 분리합니다. | **가장 큰 성능 개선 요소입니다.** 1. **Write Path:** 트랜잭션이 집중되는 부분에 최적화된 패턴을 적용하고, 2. **Read Path:** 복잡한 JOIN이나 집계 함수(Aggregation)가 필요한 조회 시점에만 별도의 읽기 전용 데이터베이스/뷰를 사용해 부하를 분리합니다. |
+
+### ✨ 아키텍처 플로우 예시 (점수 제출 및 보고서 생성)
+
+1.  **[Write Path: 점수 제출]**
+    *   사용자 요청 $\rightarrow$ **API Gateway** $\rightarrow$ **Command Handler** (CQRS)
+    *   Command Handler는 `ScoreSubmittedCommand`를 받아 **Domain Service**를 호출합니다.
+    *   Domain Service가 DDD 모델을 이용해 유효성을 검사하고, 트랜잭션에 따라 DB에 점수 데이터를 기록합니다.
+2.  **[Read Path: 보고서 조회]**
+    *   사용자 요청 $\rightarrow$ **API Gateway** $\rightarrow$ **Query Handler** (CQRS)
+    *   Query Handler는 `GenerateReportQuery`를 받아, Write Path에서 발생한 이벤트(점수 변경 등)가 미리 반영된 **읽기 전용 View/Materialized View**에서 데이터를 즉시 조회합니다.
+
+---
+
+## 🛡️ 2. 최신 보안 및 확장성 고려 요소 (Best Practices)
+
+### A. 보안 (Security)
+
+| 영역 | 구현 방법 (.NET Focus) | 이유 |
+| :--- | :--- | :--- |
+| **인증/권한 부여** | **OpenID Connect / OAuth 2.0** 사용 (IdentityServer, ASP.NET Core Identity). 역할 기반 접근 제어(RBAC) 필수 적용. | 단순 사용자 이름/비밀번호 방식은 최신 웹 환경에서 보안 위험이 높습니다. 토큰 기반 인증을 통해 세션 관리가 용이하고, 시스템 간 연동 시 표준화된 방법을 사용해야 합니다. |
+| **데이터 무결성** | 모든 핵심 입력 값(점수, 가중치 등)에 대해 **비즈니스 로직 레벨의 유효성 검사**를 수행합니다. (DTO/Command Validation). | 단순히 데이터 타입이 맞는 것을 넘어, "A 점수는 B 점수보다 높을 수 없다" 같은 도메인 규칙 위반을 아키텍처 초기에 차단해야 합니다. |
+| **API 보호** | **Rate Limiting** 및 **IP Whitelisting** 적용. 민감한 엔드포인트(예: 관리자 설정 변경)에는 2차 인증(MFA)를 의무화합니다. | 무차별 대입 공격(Brute-force Attack)과 과도한 요청으로 인한 서비스 마비(DDoS)를 방지합니다. |
+| **코드 보안** | **Secret Management Tool** (Azure Key Vault, AWS Secrets Manager 등)를 사용하여 DB 연결 문자열이나 API 키와 같은 민감 정보를 코드에 하드코딩하지 않습니다. | 환경 변수나 별도의 중앙화된 시스템에서 관리해야 합니다. |
+
+### B. 확장성 및 성능 (Scalability & Performance)
+
+| 영역 | 구현 방법 (.NET Focus) | 이유 |
+| :--- | :--- | :--- |
+| **비동기 처리** | 복잡한 보고서 생성, 대량 데이터 일괄 점수 산정 등은 **메시지 큐(Message Queue)**를 이용해 비동기 작업으로 분리합니다. (RabbitMQ, Azure Service Bus). | 요청을 즉시 처리하지 않고 큐에 넣으면, 서버의 부하가 균일하게 분산되고 사용자는 '처리 중' 상태만 받으므로 사용자 경험이 개선됩니다. |
+| **데이터 계층** | Read/Write 분리를 철저히 합니다 (CQRS). 조회는 NoSQL 또는 캐싱 레이어(Redis)를 적극 활용합니다. | 평가 시스템의 특성상, 점수 산정은 복잡하지만 보고서 조회의 빈도가 높습니다. 읽기 최적화된 데이터 구조가 필요합니다. |
+| **모듈화** | 공통 로직을 `Core` 라이브러리로 분리하고, 각 기능(점수 계산 모듈, 기준 관리 모듈)을 별도의 마이크로서비스 경계로 설계하는 것을 고려합니다 (최종 목표). | 시스템이 커질 때 특정 기능을 수정할 때 다른 영역에 영향을 주지 않도록 합니다.
+
+---
+### 요약 결론 및 권장 스택
+
+1.  **아키텍처:** Clean Architecture 기반의 CQRS + DDD 패턴 조합을 채택하여 설계합니다.
+2.  **기술 스택:** .NET 9+ (최신 버전 활용), C#, ASP.NET Core Web API.
+3.  **인프라:** Azure/AWS Cloud 환경에서 Message Queue
