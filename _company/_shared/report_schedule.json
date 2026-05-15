@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "id": "sched-1778851576034",
+      "label": "새 일정",
+      "hour": 10,
+      "minute": 0,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "action": "briefing",
+      "enabled": true
+    }
+  ]
+}
