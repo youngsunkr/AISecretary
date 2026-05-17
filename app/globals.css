@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🎨 Designer에서 정의한 핵심 컬러 팔레트 적용 (Tailwind 설정) */
+:root {
+  --color-primary: #0A1931; /* Deep Navy Blue */
+  --color-secondary: #F8F9FA; /* Cool Light Gray */
+  --color-accent: #00C4B4; /* Tech Teal */
+  --color-text-dark: #333333;
+}
+
+/* Customizing Tailwind for Brand Colors */
+.bg-primary { background-color: var(--color-primary); }
+.text-primary { color: var(--color-primary); }
+.bg-secondary { background-color: var(--color-secondary); }
+.text-accent { color: var(--color-accent); }
+
+/* Typography Setup (Inter/Pretendard fallback) */
+body {
+  font-family: 'Pretendard', sans-serif; /* 실제 환경에서 폰트 로드 필요 */
+}
